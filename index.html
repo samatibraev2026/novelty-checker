@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novelty Checker — проверка НИОКР на дублирование</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#2563eb"/>
+          <path d="M8 16a8 8 0 0 1 8-8m0 0a8 8 0 0 1 8 8m-8-8v16m-8-8h16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="logo-text">Novelty<strong>Checker</strong></span>
+      </div>
+      <nav>
+        <a href="#" class="nav-link active">Проверка</a>
+        <a href="#about" class="nav-link">О сервисе</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <h1>Проверка новизны технологических задач</h1>
+      <p class="subtitle">
+        Сервис автоматически находит потенциально дублирующие документы в базах научных публикаций
+        и присваивает заявке уровень риска дублирования.
+      </p>
+    </section>
+
+    <section class="search-section container">
+      <div class="card search-card">
+        <h2>Проверить технологическую задачу</h2>
+        <form id="checkForm">
+          <div class="form-group">
+            <label for="title">Название технологической задачи <span class="required">*</span></label>
+            <input
+              type="text"
+              id="title"
+              placeholder="Например: Разработка метода синтеза нанопористых материалов"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="description">Описание задачи <span class="required">*</span></label>
+            <textarea
+              id="description"
+              rows="5"
+              placeholder="Опишите технологическую задачу: суть проблемы, предлагаемые подходы, ожидаемые результаты..."
+              required
+            ></textarea>
+          </div>
+          <div class="form-group sources-group">
+            <label>Источники для проверки</label>
+            <div class="sources-list">
+              <label class="source-check">
+                <input type="checkbox" name="source" value="semantic_scholar" checked />
+                <span class="source-badge available">Semantic Scholar</span>
+                <span class="source-status">доступен</span>
+              </label>
+              <label class="source-check">
+                <input type="checkbox" name="source" value="crossref" checked />
+                <span class="source-badge available">CrossRef</span>
+                <span class="source-status">доступен</span>
+              </label>
+              <label class="source-check">
+                <input type="checkbox" name="source" value="wipo" disabled />
+                <span class="source-badge unavailable">WIPO PATENTSCOPE</span>
+                <span class="source-status unavailable">требуется ключ</span>
+              </label>
+              <label class="source-check">
+                <input type="checkbox" name="source" value="scopus" disabled />
+                <span class="source-badge unavailable">Scopus</span>
+                <span class="source-status unavailable">требуется подписка</span>
+              </label>
+              <label class="source-check">
+                <input type="checkbox" name="source" value="fips" disabled />
+                <span class="source-badge unavailable">Роспатент / ФИПС</span>
+                <span class="source-status unavailable">нет публичного API</span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span class="btn-text">Проверить новизну</span>
+            <svg class="spinner hidden" width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" fill="none" stroke-dasharray="40 60"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="results" class="results-section container hidden">
+      <div class="results-header">
+        <h2>Отчёт о похожести</h2>
+        <div id="riskBadge" class="risk-badge"></div>
+      </div>
+
+      <div class="sources-report" id="sourcesReport"></div>
+
+      <div id="resultsList" class="results-list"></div>
+
+      <div id="noResults" class="no-results hidden">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#10b981" stroke-width="2"/>
+          <path d="M8 12l3 3 5-5" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <h3>Потенциальных дублей не найдено</h3>
+        <p>Ни один из опрошенных источников не вернул документов с высоким уровнем сходства.</p>
+      </div>
+    </section>
+
+    <section id="about" class="about-section container">
+      <h2>О сервисе</h2>
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="about-icon">🔍</div>
+          <h3>Автоматическая проверка</h3>
+          <p>Сервис опрашивает несколько источников параллельно и объединяет результаты в единый ранжированный список похожих документов.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">⚖️</div>
+          <h3>Уровни риска</h3>
+          <p>Каждой находке присваивается уровень риска: <span class="risk-inline high">высокий</span>, <span class="risk-inline medium">средний</span>, <span class="risk-inline low">низкий</span>. Пороги настраиваемые.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">🛡️</div>
+          <h3>Отказоустойчивость</h3>
+          <p>Недоступность одного источника не блокирует выдачу отчёта. Система явно показывает, какие базы не были опрошены.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">🤝</div>
+          <h3>Решение за экспертом</h3>
+          <p>Сервис — вспомогательный сигнал. Эксперт подтверждает или отклоняет каждую находку как реальный дубль.</p>
+        </div>
+      </div>
+
+      <div class="pipeline">
+        <h3>Как это работает</h3>
+        <div class="pipeline-steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text">Заявитель подаёт технологическую задачу</div>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text">Сервис опрашивает подключённые источники</div>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text">Ранжирование по похожести, оценка риска</div>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text">Отчёт передаётся эксперту</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Novelty Checker — инструмент проверки новизны НИОКР-проектов</p>
+      <p class="footer-note">Сервис является вспомогательным сигналом. Решение о принятии/отклонении заявки всегда остаётся за экспертной комиссией.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
